@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildlife ecology</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Update base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), url('forest.png');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: #e5e7eb;  /* Light text color for dark mode */
+        }
+
+        /* Update scrollbar styles to single theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5a3c8a;
+        }
+
+        /* Loader styling */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8b5cf6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .option-btn, .revise-option-btn, .quiz-option-btn {
+            cursor: pointer;
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            color: #e5e7eb !important;
+            border: 1px solid #4b5563 !important;
+        }
+        
+        /* Google Forms-style Quiz Options */
+        .gform-option {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            background-color: rgba(30, 41, 59, 0.8); /* Darker background */
+            border: 1px solid #4b5563; /* Lighter border */
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            color: #e5e7eb; /* Light text */
+        }
+        .gform-option:active:not([style*="pointer-events: none"]) {
+            transform: scale(0.98);
+        }
+
+        .gform-option[style*="pointer-events: none"] {
+            cursor: not-allowed;
+        }
+
+        .gform-option:not([style*="pointer-events: none"]):hover {
+            background-color: rgba(55, 65, 81, 0.9); /* Slightly lighter on hover */
+        }
+
+        .gform-option-indicator {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            border: 2px solid #6b7280;
+            margin-right: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+
+        /* Update the correct/incorrect styles to only affect the indicator */
+        .gform-option.correct {
+            border-color: #4b5563;
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+
+        .gform-option.incorrect {
+            border-color: #4b5563;
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+
+        .gform-option.correct .gform-option-indicator {
+            border-color: #16a34a;
+            background-color: #16a34a;
+        }
+
+        .gform-option.incorrect .gform-option-indicator {
+            border-color: #dc2626;
+            background-color: #dc2626;
+        }
+
+        .tick-icon { color: #16a34a; }
+        .cross-icon { color: #dc2626; }
+        
+        #celebration-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Update container backgrounds */
+        .bg-white\/60 {
+            background-color: rgba(30, 41, 59, 0.8) !important;
+        }
+
+        /* Update header style */
+        header {
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Remove default button styles for quiz options */
+        .gform-option button {
+            all: unset;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+    <canvas id="celebration-canvas"></canvas>
+
+    <div id="loading-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex-col items-center justify-center z-50">
+        <div class="loader"></div>
+        <p id="loading-status" class="text-white text-lg mt-4">Processing...</p>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="mb-8">
+            <div class="bg-black/50 backdrop-blur-md p-4 rounded-lg">
+                <h1 class="text-4xl md:text-5xl font-bold text-white text-center">Wildlife Ecology</h1>
+            </div>
+        </header>
+
+        <div id="main-menu">
+            <section class="p-6 bg-black/50 backdrop-blur-md rounded-lg">
+                <h2 class="text-2xl font-bold mb-8 text-center text-white">Choose a Mode</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                    <button id="learn-mode-btn" class="bg-purple-600 hover:bg-purple-700 text-white rounded-xl p-8 transition-all duration-300 transform hover:scale-105 flex flex-col items-center justify-center min-h-[200px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                        </svg>
+                        <span class="text-2xl font-bold mb-2">Learn Mode</span>
+                        <p class="text-lg text-white/80">Study by week.</p>
+                    </button>
+
+                    <button id="revise-mode-btn" class="bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-8 transition-all duration-300 transform hover:scale-105 flex flex-col items-center justify-center min-h-[200px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="text-2xl font-bold mb-2">Revise</span>
+                        <p class="text-lg text-white/80">Practice your mistakes.</p>
+                    </button>
+
+                    <button id="weekly-quiz-mode-btn" class="bg-teal-600 hover:bg-teal-700 text-white rounded-xl p-8 transition-all duration-300 transform hover:scale-105 flex flex-col items-center justify-center min-h-[200px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <span class="text-2xl font-bold mb-2">Weekly Quiz</span>
+                        <p class="text-lg text-white/80">Quiz on specific weeks.</p>
+                    </button>
+
+                    <button id="quiz-mode-btn" class="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-8 transition-all duration-300 transform hover:scale-105 flex flex-col items-center justify-center min-h-[200px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span class="text-2xl font-bold mb-2">Mega Quiz</span>
+                        <p class="text-lg text-white/80">50 random questions.</p>
+                    </button>
+                </div>
+            </section>
+        </div>
+        
+        <div id="learn-mode-container" class="hidden">
+            <button id="back-to-menu-learn" class="flex items-center gap-2 mb-4 text-gray-200 font-bold py-2 px-4 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all duration-300">
+                <div class="rounded-full bg-black p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </div>
+                <span>Home</span>
+            </button>
+            <section class="mb-8 p-6 bg-white/60 dark:bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Controls</h2>
+                <div>
+                    <label for="assignment-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Assignment</label>
+                    <select id="assignment-selector" class="w-full bg-white dark:bg-slate-50 border border-gray-300 dark:border-gray-400 text-gray-900 p-2 focus:outline-none focus:border-purple-500 rounded-md">
+                        <option>Loading assignments...</option>
+                    </select>
+                </div>
+            </section>
+            <main id="questions-container">
+                <p class="text-center text-gray-400 dark:text-gray-400">Select an assignment to get started.</p>
+            </main>
+        </div>
+
+        <div id="quiz-mode-container" class="hidden"></div>
+        <div id="quiz-results-container" class="hidden"></div>
+
+        <div id="weekly-quiz-setup-container" class="hidden"></div>
+        <div id="weekly-quiz-container" class="hidden"></div>
+        <div id="weekly-quiz-results-container" class="hidden"></div>
+        
+        <div id="revise-mode-container" class="hidden"></div>
+
+
+    </div>
+
+    <script type="module">
+        // --- START: PASTE YOUR API KEY HERE ---
+        const GEMINI_API_KEY = "AIzaSyAJFXvv4GwWC7nDrfxmm2GMiJHMsoJatZg"; 
+        // --- END: PASTE YOUR API KEY HERE ---
+        
+        // App State
+        let allQuestions = [];
+        let currentAssignmentNumber = null;
+        let assignmentNumbers = [];
+        // Mega Quiz
+        let quizQuestions = [];
+        let userQuizAnswers = {};
+        let currentQuizQuestionIndex = 0;
+        // Weekly Quiz
+        let weeklyQuizQuestions = [];
+        let userWeeklyQuizAnswers = {};
+        let currentWeeklyQuizIndex = 0;
+
+        // UI Elements
+        const mainMenu = document.getElementById('main-menu');
+        const learnModeContainer = document.getElementById('learn-mode-container');
+        const quizModeContainer = document.getElementById('quiz-mode-container');
+        const quizResultsContainer = document.getElementById('quiz-results-container');
+        const weeklyQuizSetupContainer = document.getElementById('weekly-quiz-setup-container');
+        const weeklyQuizContainer = document.getElementById('weekly-quiz-container');
+        const weeklyQuizResultsContainer = document.getElementById('weekly-quiz-results-container');
+        const reviseModeContainer = document.getElementById('revise-mode-container');
+        const assignmentSelector = document.getElementById('assignment-selector');
+        const questionsContainer = document.getElementById('questions-container');
+        const loadingModal = document.getElementById('loading-modal');
+        const loadingStatus = document.getElementById('loading-status');
+
+        // --- INITIALIZATION & MODE SWITCHING ---
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        document.getElementById('learn-mode-btn').addEventListener('click', () => {
+            mainMenu.classList.add('hidden');
+            learnModeContainer.classList.remove('hidden');
+        });
+        document.getElementById('quiz-mode-btn').addEventListener('click', startQuiz);
+        document.getElementById('weekly-quiz-mode-btn').addEventListener('click', setupWeeklyQuiz);
+        document.getElementById('revise-mode-btn').addEventListener('click', startReviseMode);
+        document.getElementById('back-to-menu-learn').addEventListener('click', showMainMenu);
+
+        function showMainMenu() {
+            const allContainers = [learnModeContainer, quizModeContainer, quizResultsContainer, weeklyQuizSetupContainer, weeklyQuizContainer, weeklyQuizResultsContainer, reviseModeContainer];
+            allContainers.forEach(c => c.classList.add('hidden'));
+            mainMenu.classList.remove('hidden');
+        }
+        
+        async function initializeApp() {
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === "PASTE_YOUR_API_KEY_HERE") {
+                console.error("Gemini API Key is missing.");
+                alert("Please paste your Gemini API Key into the script tag in the HTML file.");
+            }
+            showLoader("Loading Questions...");
+            await loadAndParseCSV();
+            hideLoader();
+        }
+
+        async function loadAndParseCSV() {
+            try {
+                const response = await fetch('data.csv');
+                if (!response.ok) throw new Error('Network response was not ok.');
+                const csvText = await response.text();
+                
+                allQuestions = csvText.split('\n').slice(1).map((row, index) => {
+                    const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if (columns.length < 8) return null;
+                    return {
+                        id: `q-${index}`,
+                        assignmentNumber: parseInt(columns[0], 10),
+                        questionNumber: parseInt(columns[1], 10),
+                        question: columns[2].replace(/"/g, ''),
+                        options: [columns[3], columns[4], columns[5], columns[6]].map(opt => opt.replace(/"/g, '')),
+                        correctAnswer: columns[7].replace(/"/g, '').trim(),
+                        status: null, userAnswer: null, explanation: null
+                    };
+                }).filter(q => q && q.question);
+                
+                populateAssignmentSelector();
+
+            } catch (error) {
+                console.error("Failed to load or parse CSV:", error);
+                mainMenu.innerHTML = `<p class="text-center text-red-500">Could not load questions from data.csv. Please refresh the page.</p>`;
+            }
+        }
+        
+        function populateAssignmentSelector() {
+            assignmentNumbers = [...new Set(allQuestions.map(q => q.assignmentNumber))].filter(n => !isNaN(n));
+            assignmentNumbers.sort((a,b) => a-b);
+            assignmentSelector.innerHTML = '<option value="">-- Select an Assignment --</option>';
+            assignmentNumbers.forEach(num => {
+                assignmentSelector.innerHTML += `<option value="${num}">Assignment ${num}</option>`;
+            });
+        }
+
+        // --- UI & LOADING ---
+        function showLoader(message) {
+            loadingStatus.textContent = message;
+            loadingModal.classList.remove('hidden');
+            loadingModal.classList.add('flex');
+        }
+        function hideLoader() {
+            loadingModal.classList.add('hidden');
+            loadingModal.classList.remove('flex');
+        }
+
+        // --- INCORRECT ANSWER STORAGE ---
+        function getIncorrectlyAnsweredIds() {
+            return JSON.parse(localStorage.getItem('incorrectIds') || '[]');
+        }
+        function addIncorrectlyAnsweredId(id) {
+            let ids = new Set(getIncorrectlyAnsweredIds());
+            ids.add(id);
+            localStorage.setItem('incorrectIds', JSON.stringify([...ids]));
+        }
+        function removeIncorrectlyAnsweredId(id) {
+            let ids = getIncorrectlyAnsweredIds().filter(savedId => savedId !== id);
+            localStorage.setItem('incorrectIds', JSON.stringify(ids));
+        }
+
+
+        // --- LEARN MODE LOGIC ---
+        function loadQuestionsForAssignment(assignmentNum) {
+            currentAssignmentNumber = assignmentNum;
+            renderLearnQuestions(allQuestions.filter(q => q.assignmentNumber === currentAssignmentNumber));
+        }
+        function renderLearnQuestions(questions) {
+            questionsContainer.innerHTML = '';
+            if (questions.length === 0) {
+                questionsContainer.innerHTML = `<p class="text-center text-gray-500">No questions for this assignment.</p>`;
+                return;
+            }
+            questions.forEach(q => questionsContainer.appendChild(createLearnQuestionCard(q)));
+            
+            if(questions.length > 0){
+                const navControls = document.createElement('div');
+                navControls.className = "flex justify-between mt-8";
+                navControls.innerHTML = `
+                    <button id="prev-week-btn" class="nav-btn text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed">&larr; Previous Week</button>
+                    <button id="next-week-btn" class="nav-btn text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed">Next Week &rarr;</button>
+                `;
+                questionsContainer.appendChild(navControls);
+                updateLearnNavigationButtons(currentAssignmentNumber);
+            }
+        }
+        function updateLearnNavigationButtons(currentNum) {
+            const [prevBtn, nextBtn] = [document.getElementById('prev-week-btn'), document.getElementById('next-week-btn')];
+            if (!prevBtn || !nextBtn) return;
+            const currentIndex = assignmentNumbers.indexOf(currentNum);
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= assignmentNumbers.length - 1;
+        }
+        function createLearnQuestionCard(q) {
+            let borderColor = 'border-white/10 border-gray-300';
+            if (q.status === 'correct') borderColor = 'border-green-500';
+            if (q.status === 'incorrect') borderColor = 'border-red-500';
+
+            const questionEl = document.createElement('div');
+            questionEl.className = `learn-question-card bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border-l-4 rounded-lg p-6 mb-4 transition-all duration-300 ${borderColor}`;
+            questionEl.dataset.id = q.id;
+
+            let optionsHTML = q.options.map(opt => {
+                let btnClasses = "option-btn text-left w-full p-2 mt-2 bg-white dark:bg-slate-50 border border-gray-300 dark:border-gray-400 transition-all duration-200 rounded-md text-gray-800";
+                let isDisabled = '';
+                if (q.status) {
+                    isDisabled = 'disabled';
+                    const isCorrect = opt.trim().toLowerCase() === q.correctAnswer.toLowerCase().trim();
+                    const isUserSelection = opt.trim().toLowerCase() === q.userAnswer.toLowerCase().trim();
+                    if (isCorrect) btnClasses += ' bg-green-200 dark:bg-green-200 border-green-500 border-2 text-green-900 font-semibold';
+                    else if (isUserSelection && q.status === 'incorrect') btnClasses += ' bg-red-200 dark:bg-red-200 border-red-500 border-2 text-red-900 font-semibold';
+                    else btnClasses += ' opacity-60';
+                } else {
+                    btnClasses += ' hover:bg-gray-200 dark:hover:bg-slate-100';
+                }
+                return `<button class="${btnClasses}" data-answer="${opt.trim()}" ${isDisabled}>${opt.trim()}</button>`;
+            }).join('');
+            
+            let explanationHTML = '';
+            if (q.status) {
+                const explanationLoader = `<div class="explanation-loading mt-4 p-4 flex items-center text-sm text-gray-500 dark:text-gray-400"><svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Fetching explanation...</div>`;
+                const formattedExplanation = q.explanation ? q.explanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') : '';
+                const bgColor = q.status === 'correct' ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50';
+                const bdrColor = q.status === 'correct' ? 'border-green-500' : 'border-red-500';
+                const txtColor = q.status === 'correct' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200';
+
+                explanationHTML = q.explanation ? `<div class="explanation mt-4 p-4 ${bgColor} rounded-lg border-l-4 ${bdrColor}"><h4 class="font-bold ${txtColor}">Explanation</h4><p class="text-gray-800 dark:text-gray-200">${formattedExplanation}</p></div>` : explanationLoader;
+            }
+            
+            questionEl.innerHTML = `<p class="font-semibold text-lg text-gray-900 dark:text-gray-100">Q${q.questionNumber}: ${q.question}</p><div class="options-container mt-4">${optionsHTML}</div>${explanationHTML}`;
+            return questionEl;
+        }
+
+        // --- MEGA QUIZ LOGIC (One-by-one) ---
+        function startQuiz() {
+            mainMenu.classList.add('hidden');
+            quizModeContainer.classList.remove('hidden');
+
+            quizQuestions = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 50);
+            userQuizAnswers = {};
+            currentQuizQuestionIndex = 0;
+            renderMegaQuizQuestion();
+        }
+
+        function renderMegaQuizQuestion() {
+            quizModeContainer.innerHTML = '';
+            const q = quizQuestions[currentQuizQuestionIndex];
+            const userAnswer = userQuizAnswers[q.id];
+            const isAnswered = !!userAnswer;
+            const isCorrect = isAnswered ? userAnswer.toLowerCase() === q.correctAnswer.toLowerCase() : null;
+
+            let optionsHTML = q.options.map(opt => {
+                let optClasses = "mega-quiz-option-btn gform-option";
+                let optStyle = "";
+                let feedbackIconHTML = '<span class="w-6 h-6"></span>'; 
+
+                if (isAnswered) {
+                    optStyle = 'style="pointer-events: none;"';
+                    const isThisOptionUserAnswer = opt.trim() === userAnswer;
+                    if (isThisOptionUserAnswer) {
+                        optClasses += isCorrect ? ' correct' : ' incorrect';
+                        if (isCorrect) {
+                            feedbackIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+                        } else {
+                            feedbackIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
+                        }
+                    }
+                }
+                
+                return `
+                    <div class="${optClasses}" data-answer="${opt.trim()}" ${optStyle}>
+                        <span class="gform-option-indicator"></span>
+                        <span class="flex-grow">${opt.trim()}</span>
+                        ${feedbackIconHTML}
+                    </div>
+                `;
+            }).join('');
+            
+            quizModeContainer.innerHTML = `
+                <button id="back-to-menu-mq-quiz" class="mb-4 text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">&larr; Back to Menu</button>
+                <div class="bg-white/60 dark:bg-black/50 backdrop-blur-md p-6 rounded-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Mega Quiz</h2>
+                        <span class="text-gray-700 dark:text-gray-300 font-semibold">Question ${currentQuizQuestionIndex + 1} of ${quizQuestions.length}</span>
+                    </div>
+                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">${q.question}</p>
+                    <div class="mega-quiz-options mt-4">${optionsHTML}</div>
+                    <div class="flex justify-between mt-6 pt-4 border-t border-gray-300 dark:border-gray-500">
+                        <button id="prev-mq-btn" class="text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm disabled:opacity-50">&larr; Previous</button>
+                        ${currentQuizQuestionIndex === quizQuestions.length - 1
+                            ? `<button id="submit-mq-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Finish & See Results</button>`
+                            : `<button id="next-mq-btn" class="text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">Next &rarr;</button>`
+                        }
+                    </div>
+                </div>
+            `;
+            document.getElementById('back-to-menu-mq-quiz').addEventListener('click', showMainMenu);
+            document.getElementById('prev-mq-btn').disabled = currentQuizQuestionIndex === 0;
+        }
+
+        function showQuizResults() {
+            quizModeContainer.classList.add('hidden');
+            quizResultsContainer.classList.remove('hidden');
+
+            let correctCount = 0;
+            let incorrectAnswersHTML = '';
+
+            quizQuestions.forEach(q => {
+                const userAnswer = userQuizAnswers[q.id];
+                const isCorrect = userAnswer && userAnswer.toLowerCase() === q.correctAnswer.toLowerCase();
+                if (isCorrect) {
+                    correctCount++;
+                } else {
+                    addIncorrectlyAnsweredId(q.id);
+                    let optionsReviewHTML = q.options.map(opt => {
+                        let btnClasses = "text-left w-full p-2 mt-2 border rounded-md text-gray-800";
+                        const isCorrectOption = opt.trim().toLowerCase() === q.correctAnswer.toLowerCase().trim();
+                        const isUserSelection = userAnswer && (opt.trim().toLowerCase() === userAnswer.toLowerCase().trim());
+
+                        if (isCorrectOption) btnClasses += ' bg-green-200 dark:bg-green-300 border-green-500 font-semibold';
+                        else if (isUserSelection) btnClasses += ' bg-red-200 dark:bg-red-300 border-red-500 font-semibold';
+                        else btnClasses += ' bg-white dark:bg-slate-50 border-gray-300 dark:border-gray-400 opacity-70';
+                        return `<button class="${btnClasses}" disabled>${opt.trim()}</button>`;
+                    }).join('');
+
+                    incorrectAnswersHTML += `
+                        <div class="p-4 border-t border-gray-300 dark:border-gray-600">
+                            <p class="font-semibold text-gray-800 dark:text-gray-200">Q (Week ${q.assignmentNumber}): ${q.question}</p>
+                            <div class="options-container mt-2">${optionsReviewHTML}</div>
+                        </div>`;
+                }
+            });
+
+            quizResultsContainer.innerHTML = `
+                <div class="bg-white/60 dark:bg-black/50 backdrop-blur-md p-6 rounded-lg">
+                    <button id="back-to-menu-results" class="mb-4 text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">&larr; Back to Menu</button>
+                    <h2 class="text-3xl font-bold text-center text-gray-900 dark:text-gray-100">Mega Quiz Results</h2>
+                    <p class="text-center text-xl text-gray-800 dark:text-gray-200 my-4">You scored <span class="font-bold text-purple-700 dark:text-purple-400">${correctCount}</span> out of <span class="font-bold">${quizQuestions.length}</span></p>
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Review Incorrect Answers</h3>
+                        <div class="bg-white/50 dark:bg-gray-800/60 rounded-lg max-h-96 overflow-y-auto">
+                            ${incorrectAnswersHTML || '<p class="p-4 text-gray-500 dark:text-gray-400">Congratulations! You got all questions correct!</p>'}
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('back-to-menu-results').addEventListener('click', showMainMenu);
+
+            if (correctCount === quizQuestions.length && quizQuestions.length > 0) {
+                startFireworks();
+            }
+        }
+
+        // --- WEEKLY QUIZ LOGIC (One-by-one) ---
+        function setupWeeklyQuiz() {
+            mainMenu.classList.add('hidden');
+            weeklyQuizSetupContainer.classList.remove('hidden');
+            
+            let checkboxesHTML = assignmentNumbers.map(num => `
+                <label class="flex items-center space-x-3 bg-white/80 dark:bg-slate-50/80 p-3 rounded-md cursor-pointer hover:bg-gray-200 dark:hover:bg-slate-100 transition-colors">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-teal-600 rounded" value="${num}">
+                    <span class="text-gray-900 font-medium">Week ${num}</span>
+                </label>
+            `).join('');
+
+            weeklyQuizSetupContainer.innerHTML = `
+                <div class="bg-white/60 dark:bg-black/50 backdrop-blur-md p-6 rounded-lg">
+                    <button id="back-to-menu-wq-setup" class="mb-4 text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">&larr; Back to Menu</button>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Select Weeks for Quiz</h2>
+                    <div id="weekly-quiz-options" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">${checkboxesHTML}</div>
+                    <button id="start-weekly-quiz-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-md text-lg">Start Quiz</button>
+                </div>
+            `;
+            document.getElementById('back-to-menu-wq-setup').addEventListener('click', showMainMenu);
+            document.getElementById('start-weekly-quiz-btn').addEventListener('click', startWeeklyQuiz);
+        }
+
+        function startWeeklyQuiz() {
+            const selectedWeeks = Array.from(document.querySelectorAll('#weekly-quiz-options input:checked')).map(cb => parseInt(cb.value));
+            if (selectedWeeks.length === 0) {
+                alert("Please select at least one week.");
+                return;
+            }
+            weeklyQuizQuestions = allQuestions.filter(q => selectedWeeks.includes(q.assignmentNumber)).sort(() => 0.5 - Math.random());
+            
+            if (weeklyQuizQuestions.length === 0) {
+                alert("No questions found for the selected weeks.");
+                return;
+            }
+            userWeeklyQuizAnswers = {};
+            currentWeeklyQuizIndex = 0;
+            weeklyQuizSetupContainer.classList.add('hidden');
+            weeklyQuizContainer.classList.remove('hidden');
+            renderWeeklyQuizQuestion();
+        }
+        
+        function renderWeeklyQuizQuestion() {
+            weeklyQuizContainer.innerHTML = '';
+            const q = weeklyQuizQuestions[currentWeeklyQuizIndex];
+            const userAnswer = userWeeklyQuizAnswers[q.id];
+            const isAnswered = !!userAnswer;
+            const isCorrect = isAnswered ? userAnswer.toLowerCase() === q.correctAnswer.toLowerCase() : null;
+
+            let optionsHTML = q.options.map(opt => {
+                let optClasses = "weekly-quiz-option-btn gform-option";
+                let optStyle = "";
+                let feedbackIconHTML = '<span class="w-6 h-6"></span>'; 
+
+                if (isAnswered) {
+                    optStyle = 'style="pointer-events: none;"';
+                    const isThisOptionUserAnswer = opt.trim() === userAnswer;
+                    if (isThisOptionUserAnswer) {
+                        optClasses += isCorrect ? ' correct' : ' incorrect';
+                        if (isCorrect) {
+                            feedbackIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+                        } else {
+                            feedbackIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
+                        }
+                    }
+                }
+                
+                return `
+                    <div class="${optClasses}" data-answer="${opt.trim()}" ${optStyle}>
+                        <span class="gform-option-indicator"></span>
+                        <span class="flex-grow">${opt.trim()}</span>
+                        ${feedbackIconHTML}
+                    </div>
+                `;
+            }).join('');
+            
+            weeklyQuizContainer.innerHTML = `
+                <button id="back-to-menu-wq-quiz" class="mb-4 text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">&larr; Back to Menu</button>
+                <div class="bg-white/60 dark:bg-black/50 backdrop-blur-md p-6 rounded-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Weekly Quiz</h2>
+                        <span class="text-gray-700 dark:text-gray-300 font-semibold">Question ${currentWeeklyQuizIndex + 1} of ${weeklyQuizQuestions.length}</span>
+                    </div>
+                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">${q.question}</p>
+                    <div class="weekly-quiz-options mt-4">${optionsHTML}</div>
+                    <div class="flex justify-between mt-6 pt-4 border-t border-gray-300 dark:border-gray-500">
+                        <button id="prev-wq-btn" class="text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm disabled:opacity-50">&larr; Previous</button>
+                        ${currentWeeklyQuizIndex === weeklyQuizQuestions.length - 1
+                            ? `<button id="submit-wq-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">Finish & See Results</button>`
+                            : `<button id="next-wq-btn" class="text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">Next &rarr;</button>`
+                        }
+                    </div>
+                </div>
+            `;
+            document.getElementById('back-to-menu-wq-quiz').addEventListener('click', showMainMenu);
+            document.getElementById('prev-wq-btn').disabled = currentWeeklyQuizIndex === 0;
+        }
+        
+        async function showWeeklyQuizResults() {
+            weeklyQuizContainer.classList.add('hidden');
+            weeklyQuizResultsContainer.classList.remove('hidden');
+
+            let correctCount = 0;
+            const incorrectAnswers = [];
+
+            weeklyQuizQuestions.forEach(q => {
+                const userAnswer = userWeeklyQuizAnswers[q.id];
+                if (userAnswer && userAnswer.toLowerCase() === q.correctAnswer.toLowerCase()) {
+                    correctCount++;
+                } else {
+                    addIncorrectlyAnsweredId(q.id);
+                    incorrectAnswers.push({ question: q, userAnswer: userAnswer || "Not Answered" });
+                }
+            });
+            
+            const isPerfectScore = correctCount === weeklyQuizQuestions.length && weeklyQuizQuestions.length > 0;
+
+            let reviewHTML = '';
+            if (incorrectAnswers.length > 0) {
+                reviewHTML = `
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Review Incorrect Answers</h3>
+                        <div id="wq-incorrect-review" class="bg-white/50 dark:bg-gray-800/60 rounded-lg max-h-96 overflow-y-auto space-y-4 p-4">
+                            </div>
+                    </div>`;
+            } else if (!isPerfectScore) {
+                reviewHTML = `<p class="mt-8 text-center text-gray-600 dark:text-gray-400">You did not answer all questions.</p>`;
+            }
+
+
+            weeklyQuizResultsContainer.innerHTML = `
+                <div class="bg-white/60 dark:bg-black/50 backdrop-blur-md p-6 rounded-lg">
+                    <button id="back-to-menu-wq-results" class="mb-4 text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">&larr; Back to Menu</button>
+                    <h2 class="text-3xl font-bold text-center text-gray-900 dark:text-gray-100">Weekly Quiz Results</h2>
+                    <p class="text-center text-xl text-gray-800 dark:text-gray-200 my-4">You scored <span class="font-bold text-teal-700 dark:text-teal-400">${correctCount}</span> out of <span class="font-bold">${weeklyQuizQuestions.length}</span></p>
+                    ${isPerfectScore ? '<p class="text-center text-lg font-semibold text-green-600 dark:text-green-400">🎉 Congratulations! Perfect Score! 🎉</p>' : ''}
+                    ${reviewHTML}
+                </div>
+            `;
+            document.getElementById('back-to-menu-wq-results').addEventListener('click', showMainMenu);
+
+            if (isPerfectScore) {
+                startFireworks();
+            }
+            if (incorrectAnswers.length > 0) {
+                populateIncorrectAnswersDetails(incorrectAnswers);
+            }
+        }
+        
+        async function populateIncorrectAnswersDetails(incorrectAnswers) {
+            const container = document.getElementById('wq-incorrect-review');
+            if (!container) return;
+            
+            container.innerHTML = incorrectAnswers.map((item, index) => {
+                const q = item.question;
+                return `
+                    <div class="p-4 border-t border-gray-300 dark:border-gray-600">
+                        <p class="font-semibold text-gray-800 dark:text-gray-200">Q (Week ${q.assignmentNumber}): ${q.question}</p>
+                        <p class="text-red-600 dark:text-red-400 mt-2">Your answer: ${item.userAnswer}</p>
+                        <p class="text-green-600 dark:text-green-400">Correct answer: ${q.correctAnswer}</p>
+                        <div id="explanation-${index}" class="mt-4 p-3 bg-gray-200 dark:bg-gray-700 rounded-md text-sm text-gray-800 dark:text-gray-300">
+                        <div class="flex items-center"><svg class="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Loading explanation...</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const explanationPromises = incorrectAnswers.map(item => 
+                getExplanationForQuiz(item.question, item.userAnswer, item.question.correctAnswer)
+            );
+
+            const explanations = await Promise.all(explanationPromises);
+
+            explanations.forEach((explanation, index) => {
+                const explanationEl = document.getElementById(`explanation-${index}`);
+                if (explanationEl) {
+                    explanationEl.innerHTML = explanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                }
+            });
+        }
+        
+        // --- REVISE MODE LOGIC ---
+        function startReviseMode() {
+            mainMenu.classList.add('hidden');
+            reviseModeContainer.classList.remove('hidden');
+            renderReviseQuiz();
+        }
+
+        function renderReviseQuiz() {
+            reviseModeContainer.innerHTML = '';
+            const incorrectIds = getIncorrectlyAnsweredIds();
+            const reviseQuestions = allQuestions.filter(q => incorrectIds.includes(q.id));
+            
+            reviseQuestions.forEach(q => q.status = null); // Reset status for re-attempt
+
+            const reviseHeader = document.createElement('div');
+            reviseHeader.innerHTML = `
+                <div class="bg-white/60 dark:bg-black/50 backdrop-blur-md p-6 rounded-lg mb-6">
+                    <button id="back-to-menu-revise" class="mb-4 text-gray-800 font-bold py-2 px-4 rounded-md bg-white/80 hover:bg-white/100 dark:bg-slate-300/80 dark:hover:bg-slate-300/100 backdrop-blur-sm">&larr; Back to Menu</button>
+                    <div class="flex justify-between items-center mt-4">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Revise Your Mistakes</h2>
+                        <span class="text-gray-700 dark:text-gray-300 font-semibold">${reviseQuestions.length} Questions</span>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">Answer the questions you've previously gotten wrong. Correct answers will be removed from this list.</p>
+                </div>`;
+            reviseModeContainer.appendChild(reviseHeader);
+            document.getElementById('back-to-menu-revise').addEventListener('click', showMainMenu);
+
+            if (reviseQuestions.length === 0) {
+                reviseModeContainer.innerHTML += `<p class="text-center text-gray-400 dark:text-gray-400 py-8">You have no incorrect answers to revise. Great job!</p>`;
+                return;
+            }
+
+            reviseQuestions.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = `revise-question-card bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-lg p-6 mb-4 border-l-4 dark:border-white/10 border-gray-300`;
+                questionEl.dataset.id = q.id;
+
+                let optionsHTML = q.options.map(opt => `<button class="revise-option-btn text-left w-full p-2 mt-2 bg-white dark:bg-slate-50 border border-gray-300 dark:border-gray-400 transition-all duration-200 rounded-md text-gray-800 hover:bg-gray-200 dark:hover:bg-slate-100" data-answer="${opt.trim()}">${opt.trim()}</button>`).join('');
+                
+                questionEl.innerHTML = `<p class="font-semibold text-lg text-gray-900 dark:text-gray-100">${index + 1}. ${q.question}</p><div class="options-container mt-4">${optionsHTML}</div>`;
+                reviseModeContainer.appendChild(questionEl);
+            });
+        }
+
+
+        // --- EVENT LISTENERS ---
+        assignmentSelector.addEventListener('change', (e) => {
+            if (e.target.value) loadQuestionsForAssignment(parseInt(e.target.value));
+        });
+
+        document.body.addEventListener('click', async (e) => {
+            // Learn Mode Navigation
+            if(e.target.matches('.nav-btn')) {
+                const currentIndex = assignmentNumbers.indexOf(currentAssignmentNumber);
+                if (e.target.id === 'prev-week-btn' && currentIndex > 0) assignmentSelector.value = assignmentNumbers[currentIndex - 1];
+                if (e.target.id === 'next-week-btn' && currentIndex < assignmentNumbers.length - 1) assignmentSelector.value = assignmentNumbers[currentIndex + 1];
+                assignmentSelector.dispatchEvent(new Event('change'));
+                return;
+            }
+
+            // Learn Mode Answering
+            const learnQuestionCard = e.target.closest('.learn-question-card');
+            if (learnQuestionCard && e.target.classList.contains('option-btn')) {
+                const q = allQuestions.find(q => q.id === learnQuestionCard.dataset.id);
+                if (q && !q.status) checkLearnAnswer(q, e.target.dataset.answer);
+                return;
+            }
+
+            // Mega Quiz Answering & Navigation
+            const megaQuizOption = e.target.closest('.mega-quiz-option-btn');
+            if(megaQuizOption){
+                const q = quizQuestions[currentQuizQuestionIndex];
+                if (!userQuizAnswers[q.id]) {
+                    userQuizAnswers[q.id] = megaQuizOption.dataset.answer;
+                    renderMegaQuizQuestion();
+                }
+                return;
+            }
+
+            if (e.target.id === 'next-mq-btn' && currentQuizQuestionIndex < quizQuestions.length - 1) {
+                currentQuizQuestionIndex++;
+                renderMegaQuizQuestion();
+            }
+            if (e.target.id === 'prev-mq-btn' && currentQuizQuestionIndex > 0) {
+                currentQuizQuestionIndex--;
+                renderMegaQuizQuestion();
+            }
+            if(e.target.id === 'submit-mq-btn') showQuizResults();
+
+            // Weekly Quiz Answering & Navigation
+            const weeklyQuizOption = e.target.closest('.weekly-quiz-option-btn');
+            if(weeklyQuizOption){
+                const q = weeklyQuizQuestions[currentWeeklyQuizIndex];
+                if (!userWeeklyQuizAnswers[q.id]) {
+                    userWeeklyQuizAnswers[q.id] = weeklyQuizOption.dataset.answer;
+                    renderWeeklyQuizQuestion();
+                }
+                return;
+            }
+
+            if (e.target.id === 'next-wq-btn' && currentWeeklyQuizIndex < weeklyQuizQuestions.length - 1) {
+                currentWeeklyQuizIndex++;
+                renderWeeklyQuizQuestion();
+            }
+            if (e.target.id === 'prev-wq-btn' && currentWeeklyQuizIndex > 0) {
+                currentWeeklyQuizIndex--;
+                renderWeeklyQuizQuestion();
+            }
+            if(e.target.id === 'submit-wq-btn') showWeeklyQuizResults();
+            
+            // Revise Mode Answering
+            const reviseQuestionCard = e.target.closest('.revise-question-card');
+            if (reviseQuestionCard && e.target.classList.contains('revise-option-btn')) {
+                const q = allQuestions.find(q => q.id === reviseQuestionCard.dataset.id);
+                if (q && !q.status) {
+                    const userAnswer = e.target.dataset.answer;
+                    const isCorrect = userAnswer.toLowerCase().trim() === q.correctAnswer.toLowerCase().trim();
+                    q.status = isCorrect ? 'correct' : 'incorrect';
+                    
+                    reviseQuestionCard.querySelectorAll('.revise-option-btn').forEach(btn => btn.disabled = true);
+                    e.target.classList.add(isCorrect ? 'bg-green-200 dark:bg-green-300 border-green-500 font-semibold' : 'bg-red-200 dark:bg-red-300 border-red-500 font-semibold');
+                    reviseQuestionCard.classList.remove('dark:border-white/10', 'border-gray-300');
+                    reviseQuestionCard.classList.add(isCorrect ? 'border-green-500' : 'border-red-500');
+
+                    if(isCorrect) {
+                        removeIncorrectlyAnsweredId(q.id);
+                    }
+                }
+            }
+
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!loadingModal.classList.contains('hidden')) return;
+
+            // --- Handle Enter Key for Navigation ---
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                if (!weeklyQuizContainer.classList.contains('hidden')) {
+                    const nextBtn = document.getElementById('next-wq-btn') || document.getElementById('submit-wq-btn');
+                    if (nextBtn) nextBtn.click();
+                } else if (!quizModeContainer.classList.contains('hidden')) {
+                    const nextBtn = document.getElementById('next-mq-btn') || document.getElementById('submit-mq-btn');
+                    if (nextBtn) nextBtn.click();
+                }
+            }
+
+            // --- Handle Number Keys for Option Selection ---
+            if (e.key >= '1' && e.key <= '4') {
+                e.preventDefault();
+                const optionIndex = parseInt(e.key) - 1;
+
+                if (!weeklyQuizContainer.classList.contains('hidden')) {
+                    const options = weeklyQuizContainer.querySelectorAll('.weekly-quiz-option-btn');
+                    if (options[optionIndex] && !options[optionIndex].style.pointerEvents) {
+                        options[optionIndex].click();
+                    }
+                } else if (!quizModeContainer.classList.contains('hidden')) {
+                    const options = quizModeContainer.querySelectorAll('.mega-quiz-option-btn');
+                    if (options[optionIndex] && !options[optionIndex].style.pointerEvents) {
+                        options[optionIndex].click();
+                    }
+                }
+            }
+        });
+        
+        // --- ANSWER LOGIC & GEMINI API ---
+        async function checkLearnAnswer(questionData, userAnswer) {
+            const isCorrect = userAnswer.toLowerCase().trim() === questionData.correctAnswer.toLowerCase().trim();
+            questionData.userAnswer = userAnswer;
+            questionData.status = isCorrect ? 'correct' : 'incorrect';
+            loadQuestionsForAssignment(currentAssignmentNumber); // Re-render to show selection   
+            try {
+                const explanation = await getExplanationForQuiz(questionData, userAnswer);
+                questionData.explanation = explanation;
+            } catch (error) {
+                console.error("Error fetching explanation:", error);
+                questionData.explanation = "Could not fetch explanation.";
+            }
+            loadQuestionsForAssignment(currentAssignmentNumber); // Re-render again with explanation
+        }
+        
+        async function getExplanationForQuiz(questionData, userAnswer) {
+            const questionText = questionData.question;
+            const correctAnswer = questionData.correctAnswer;
+            const isCorrect = userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === "PASTE_YOUR_API_KEY_HERE") return "API key not set.";
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+            
+            let prompt = isCorrect 
+                ? `For the question: "${questionText}", the user correctly answered "${userAnswer}". Provide a short, precise explanation of why this answer is correct. Use double asterisks to bold key terms.`
+                : `For the question: "${questionText}", the user incorrectly answered "${userAnswer}". The correct answer is "${correctAnswer}". Provide a short and precise explanation. Format it exactly like this, using double asterisks for bolding:\n\n**Why your answer is wrong:** A brief explanation.\n\n**Why the correct answer is right:** A brief explanation.`;
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            
+            if (!response.ok) throw new Error(`API request failed: ${await response.text()}`);
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Invalid response from AI.";
+        }
+        
+        // --- FIREWORKS ANIMATION ---
+        const celebrationCanvas = document.getElementById('celebration-canvas');
+        const ctx = celebrationCanvas.getContext('2d');
+        let fireworks = [];
+        let particles = [];
+
+        function startFireworks() {
+            celebrationCanvas.style.display = 'block';
+            celebrationCanvas.width = window.innerWidth;
+            celebrationCanvas.height = window.innerHeight;
+            
+            function launch() {
+                if (fireworks.length < 15) { // Launch a bunch
+                    fireworks.push(new Firework());
+                }
+            }
+
+            let launchInterval = setInterval(launch, 400);
+            animateFireworks();
+            
+            setTimeout(() => {
+                celebrationCanvas.style.display = 'none';
+                fireworks = [];
+                particles = [];
+                clearInterval(launchInterval);
+            }, 6000); // Stop after 6 seconds
+        }
+
+        function animateFireworks() {
+            if (celebrationCanvas.style.display === 'none') return;
+            
+            // Clear the canvas without a dark overlay to keep the background visible
+            ctx.clearRect(0, 0, celebrationCanvas.width, celebrationCanvas.height);
+            
+            fireworks.forEach((firework, i) => {
+                if (firework.done) {
+                    fireworks.splice(i, 1);
+                } else {
+                    firework.update();
+                    firework.draw();
+                }
+            });
+
+            particles.forEach((particle, i) => {
+                if (particle.alpha <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    particle.update();
+                    particle.draw();
+                }
+            });
+
+            requestAnimationFrame(animateFireworks);
+        }
+
+        const diwaliColors = ['#FFD700', '#FF4500', '#FF69B4', '#ADFF2F', '#1E90FF', '#DA70D6'];
+
+        function Firework() {
+            this.x = Math.random() * celebrationCanvas.width;
+            this.y = celebrationCanvas.height;
+            this.targetX = this.x;
+            this.targetY = Math.random() * (celebrationCanvas.height / 2);
+            this.speed = 3;
+            this.angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+            this.velX = Math.cos(this.angle) * this.speed;
+            this.velY = Math.sin(this.angle) * this.speed;
+            this.color = diwaliColors[Math.floor(Math.random() * diwaliColors.length)];
+            this.done = false;
+        }
+
+        Firework.prototype.update = function() {
+            this.x += this.velX * Math.random() * 5;
+            this.y += this.velY * Math.random() * 5;
+
+            if (this.y <= this.targetY) {
+                this.explode();
+                this.done = true;
+            }
+        };
+
+        Firework.prototype.draw = function() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        Firework.prototype.explode = function() {
+            const particleCount = 80;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle(this.x, this.y, this.color));
+            }
+        };
+
+        function Particle(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.speed = Math.random() * 5 + 1;
+            this.angle = Math.random() * Math.PI * 2;
+            this.velX = Math.cos(this.angle) * this.speed;
+            this.velY = Math.sin(this.angle) * this.speed;
+            this.friction = 0.98;
+            this.gravity = 0.05;
+            this.alpha = 1;
+        }
+
+        Particle.prototype.update = function() {
+            this.velX *= this.friction;
+            this.velY *= this.friction;
+            this.velY += this.gravity;
+            this.x += this.velX;
+            this.y += this.velY;
+            this.alpha -= 0.02;
+        };
+
+        Particle.prototype.draw = function() {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        };
+
+    </script>
+</body>
+</html>
